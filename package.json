@@ -1,0 +1,8 @@
+{
+  "author": "jefBinomed",
+  "name": "protal-devfest-2013",
+  "dependencies": {
+    "socket.io": "~0.9.14",
+    "connect" : "~2.8.4"
+  }
+}
