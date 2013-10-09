@@ -3,6 +3,7 @@
   "name": "protal-devfest-2013",
   "dependencies": {
     "socket.io": "~0.9.14",
-    "connect" : "~2.8.4"
+    "connect" : "~2.8.4",
+    "node-static" : "~0.6.9"
   }
 }

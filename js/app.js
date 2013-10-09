@@ -1,4 +1,5 @@
 $(function(){
+	/*
 	var onFailSoHard = function(e) {
     	console.log('Reeeejected!', e);
   	};
@@ -7,7 +8,12 @@ $(function(){
 	navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
   	// Not showing vendor prefixes.
-  	navigator.getUserMedia({video: true}, function(localMediaStream) {
+  	navigator.getUserMedia(
+  			{
+  					video: {
+  						mandatory: { minWidth: 1024, minHeight: 768 }
+  					}}
+  			, function(localMediaStream) {
 	    var video = document.querySelector('#srcVideo');
 	    video.src = window.URL.createObjectURL(localMediaStream);
 
@@ -49,287 +55,440 @@ $(function(){
 
         }
     });
-
+*/
 
 
 });
 
+'use strict';
 
-/*
-angular.module('RealTimeInnov.single',['RealTimeInnov.rtcsingle', 'RealTimeInnov.components','RealTimeInnov.model'])
-.controller('SingleCtrl', ['$rootScope','$scope', '$http', 'RTCServicesSingle', 'ModelServices', function($rootScope, $scope, $http, rtc,model) {
+var sendChannel, receiveChannel;
+var sendButton = document.getElementById("sendButton");
+var sendTextarea = document.getElementById("dataChannelSend");
+var receiveTextarea = document.getElementById("dataChannelReceive");
 
-	//$scope.localConnection = false;
-	$scope.conferenceRoomName = "";
-	$scope.conferenceNameDisabled = "";
+sendButton.onclick = sendData;
 
-	// Ids
-	$scope.webcamId = "webcamId";
-	$scope.screenId = "screenId";
-	$scope.remoteId = "remoteId";
-	$scope.remoteScreenId = "remoteScreenId";
-	$scope.screenShotId = "screenShotId";
+var isChannelReady;
+var isInitiator;
+var isStarted;
+var localStream;
+var pc;
+var remoteStream;
+var turnReady;
 
-	// Modification dynamique du css du masque de webcam
-	$scope.topMasque = 0;
-	$scope.leftMasque = 0;
-	$scope.widthMasque = 100;
-	$scope.heightMasque = 100;
+var pc_config = webrtcDetectedBrowser === 'firefox' ?
+  {'iceServers':[{'url':'stun:23.21.150.121'}]} : // number IP
+  {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
 
-	$scope.heightCanvas = (window.innerHeight * 0.4)+"px";
-	$scope.widthCanvas = (window.innerWidth * 0.3)+"px";
-	
+var pc_constraints = {
+  'optional': [
+    {'DtlsSrtpKeyAgreement': true},
+    {'RtpDataChannels': true}
+  ]};
 
-	$scope.requestVideo = function(){				
-		
-		rtc.requestStreams({
-			videoId : $scope.webcamId,
-			webcam : true,
-			screen : false
-		});
-	
-	}	
+// Set up audio and video regardless of what devices are present.
+var sdpConstraints = {'mandatory': {
+  'OfferToReceiveAudio':true,
+  'OfferToReceiveVideo':true }};
 
-	$scope.call = function(){
-		rtc.rtcConnection();
-	}
+/////////////////////////////////////////////
 
-	$scope.hangout = function(){
-		rtc.hangup();
-	}
+var room = location.pathname.substring(1);
+if (room === '') {
+//  room = prompt('Enter room name:');
+  room = 'foo';
+} else {
+  //
+}
 
-	$scope.offerWebCam = function(){
-		rtc.requestStreams({
-			videoId : $scope.webcamId,
-			webcam : true,
-			screen : false
-		});
-		//rtc.offerWebCam();
-	}
+var socket = io.connect();
 
-	$scope.offerScreen = function(){
-		rtc.requestStreams({
-			videoId : $scope.screenId,
-			webcam : false,
-			screen : true
-		});
-		//rtc.offerScreen();
-	}
+if (room !== '') {
+  console.log('Create or join room', room);
+  socket.emit('create or join', room);
+}
 
-	var first = true;
+socket.on('created', function (room){
+  console.log('Created room ' + room);
+  isInitiator = true;
+});
 
-	function rtcReady(event, data){
-		$rootScope.$broadcast('videoRtcEvent', {
-			videoId : first ? $scope.remoteId : $scope.remoteScreenId,
-			stream : data
-		});
+socket.on('full', function (room){
+  console.log('Room ' + room + ' is full');
+});
 
-		first = false;
-	}
+socket.on('join', function (room){
+  console.log('Another peer made a request to join room ' + room);
+  console.log('This peer is the initiator of room ' + room + '!');
+  isChannelReady = true;
+});
 
-	$scope.photo = function(){
-		$rootScope.$broadcast('takePhotoEvent', {videoId : $scope.screenId});
-		$rootScope.$broadcast('takePhotoEvent', {videoId : $scope.webcamId});
-	}
+socket.on('joined', function (room){
+  console.log('This peer has joined room ' + room);
+  isChannelReady = true;
+});
 
-	$rootScope.$on('videoRtcEvent', function(event, param){
-		
-	});
-	
+socket.on('log', function (array){
+  console.log.apply(console, array);
+});
 
-	function updatePhoto(){
-		
-		$rootScope.$broadcast('updatePhotoEvt',{
-			id:$scope.screenShotId,
-			videos:[{				
-					videoId: $scope.screenId,
-					x: $scope.leftMasque,
-					y: $scope.topMasque,
-					width: $scope.widthMasque,
-					height: $scope.heightMasque,
-					delta:true
-				}
-				,
-				{				
-					videoId: $scope.webcamId,
-					x: 0,
-					y: 0,
-					width: 100,
-					height: 100,
-					posX : 20,
-					posY : 20,
-					finalWidth : 20,
-					finalHeight : 20,
-					delta:true
-				}
-			]
-		});
-		requestAnimationFrame(updatePhoto);		
-		
-	}
-	
+////////////////////////////////////////////////
 
+function sendMessage(message){
+	console.log('Sending message: ', message);
+  socket.emit('message', message);
+}
 
+socket.on('message', function (message){
+  console.log('Received message:', message);
+  if (message === 'got user media') {
+  	maybeStart();
+  } else if (message.type === 'offer') {
+    if (!isInitiator && !isStarted) {
+      maybeStart();
+    }
+    pc.setRemoteDescription(new RTCSessionDescription(message));
+    doAnswer();
+  } else if (message.type === 'answer' && isStarted) {
+    pc.setRemoteDescription(new RTCSessionDescription(message));
+  } else if (message.type === 'candidate' && isStarted) {
+    var candidate = new RTCIceCandidate({sdpMLineIndex:message.label,
+      candidate:message.candidate});
+    pc.addIceCandidate(candidate);
+  } else if (message === 'bye' && isStarted) {
+    handleRemoteHangup();
+  }
+});
 
-	//PAS BIEN
-	$scope.draw = function(){
-		
+////////////////////////////////////////////////////
 
+var localVideo = document.querySelector('#localVideo');
+var remoteVideo = document.querySelector('#remoteVideo');
 
+function handleUserMedia(stream) {
+  localStream = stream;
+  attachMediaStream(localVideo, stream);
+  console.log('Adding local stream.');
+  sendMessage('got user media');
+  if (isInitiator) {
+    maybeStart();
+  }
+}
 
-		var idCanvas = "myCanvas";
-		var canvas = document.getElementById(idCanvas);
-		idCanvas = "canvas-screenShotId";
-		var canvasScreenShot = document.getElementById(idCanvas);
-	    var context = canvas.getContext('2d');
-	    var contextScreenShot = canvasScreenShot.getContext('2d');
+function handleUserMediaError(error){
+  console.log('navigator.getUserMedia error: ', error);
+}
 
-		context.beginPath();
-		context.rect(0, 0, canvas.clientWidth,canvas.clientHeight);
-		context.fillStyle = 'black';
-		context.fill();
+var constraints = {video: true};
 
-		var videoId = "webcamId";
-		//videoId = "1";
-	 	var videoDom= document.getElementById("video-"+videoId);	
-		videoId = "screenId";
-		//videoId = "1";
-	 	var videoDomScreen= document.getElementById("video-"+videoId);	
-		//context.drawImage(videoDom, 0, 0, 320,176, 5,5,130,130);
-		//context.drawImage(videoDom, 0,0, 320,176,5,5,230,130);					
-		
-		
-		function drawVideo(contextCanvas, canvasToUse, videoToWrite, videoDomToWrite){
+navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
+console.log('Getting user media with constraints', constraints);
 
-			var useWidth = canvasToUse.clientWidth;
-			var useHeight = canvasToUse.clientHeight;
-			var ratio = videoDomToWrite.videoWidth / videoDomToWrite.videoHeight;
-			if( (useWidth/ratio) > useHeight){
-				useWidth = useHeight * ratio;
-			}else{
-				useHeight = useWidth / ratio;
-			}
-			var deltaX = videoToWrite.delta ? ((canvasToUse.clientWidth - useWidth) / 2) : 0;
-			var deltaY = videoToWrite.delta ? ((canvasToUse.clientHeight - useHeight) / 2) : 0;
+requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
 
-			contextCanvas.drawImage(videoDomToWrite, // Image source
-						videoToWrite.x * (useWidth / 100), // x de départ dans l'image source
-						videoToWrite.y * (useHeight / 100), // y de départ dans l'image source
-						videoToWrite.width * (videoDomToWrite.videoWidth / 100), // largeur à prendre dans l'image d'origine depuis le x
-						videoToWrite.height * (videoDomToWrite.videoHeight / 100), // hauteur à prendre dans l'image d'orgine depuis le y
-						deltaX + (videoToWrite.posX ? videoToWrite.posX * (useWidth / 100) : 0), // point de départ en x pour écrire dans le canvas
-						deltaY + (videoToWrite.posY ? videoToWrite.posY * (useHeight / 100): 0), // point de départ en y pour écrire dans le canvas
-						videoToWrite.finalWidth ? videoToWrite.finalWidth * (useWidth / 100) : useWidth, // largeur de l'image finale dans le canvas
-						videoToWrite.finalHeight ? videoToWrite.finalHeight * (useHeight / 100): useHeight // hauteur de l'image finale dans le canvas
-						);
+function maybeStart() {
+  if (!isStarted && localStream && isChannelReady) {
+    createPeerConnection();
+    pc.addStream(localStream);
+    isStarted = true;
+    if (isInitiator) {
+      doCall();
+    }
+  }
+}
 
-			if (socketPush && ready){
-				socketPush.send(JSON.stringify({type:"image",data:canvasToUse.toDataURL('image/webp', 1)}));
-			}
-		}
+window.onbeforeunload = function(e){
+	sendMessage('bye');
+}
 
+/////////////////////////////////////////////////////////
 
-		//var video = {x:0,y:0,width:100,height:100, delta : true};
-		//drawVideo(context, canvas, video, videoDomScreen);
-		//drawVideo(contextScreenShot, canvasScreenShot, video, videoDomScreen);		
-		var video = {x:0,y:0,width:100,height:100, posX : 0, posY :0, finalWidth: 100, finalHeight : 100, delta : true};
-		drawVideo(context, canvas, video, videoDom);
-		//drawVideo(contextScreenShot, canvasScreenShot, video, videoDom);		
+function createPeerConnection() {
+  try {
+    pc = new RTCPeerConnection(pc_config, pc_constraints);
+    pc.onicecandidate = handleIceCandidate;
+    console.log('Created RTCPeerConnnection with:\n' +
+      '  config: \'' + JSON.stringify(pc_config) + '\';\n' +
+      '  constraints: \'' + JSON.stringify(pc_constraints) + '\'.');
+  } catch (e) {
+    console.log('Failed to create PeerConnection, exception: ' + e.message);
+    alert('Cannot create RTCPeerConnection object.');
+      return;
+  }
+  pc.onaddstream = handleRemoteStreamAdded;
+  pc.onremovestream = handleRemoteStreamRemoved;
 
-		requestAnimationFrame($scope.draw);		
-		
-	}	
-	setTimeout($scope.draw,1000);
-	//requestAnimationFrame($scope.draw);	
+  if (isInitiator) {
+    try {
+      // Reliable Data Channels not yet supported in Chrome
+      sendChannel = pc.createDataChannel("sendDataChannel",
+        {reliable: false});
+      trace('Created send data channel');
+    } catch (e) {
+      alert('Failed to create data channel. ' +
+            'You need Chrome M25 or later with RtpDataChannel enabled');
+      trace('createDataChannel() failed with exception: ' + e.message);
+    }
+    sendChannel.onopen = handleSendChannelStateChange;
+    sendChannel.onclose = handleSendChannelStateChange;
+  } else {
+    pc.ondatachannel = gotReceiveChannel;
+  }
+}
 
+function sendData() {
+  var data = sendTextarea.value;
+  sendChannel.send(data);
+  trace('Sent data: ' + data);
+}
 
-	var bufferSound = [];
-	var idSound = "monSon";
-	var audio = document.getElementById(idSound);
-	audio.addEventListener('onended',function(){
-		if (bufferSound.length > 0){
-			audio.src = bufferSound.shift();
+// function closeDataChannels() {
+//   trace('Closing data channels');
+//   sendChannel.close();
+//   trace('Closed data channel with label: ' + sendChannel.label);
+//   receiveChannel.close();
+//   trace('Closed data channel with label: ' + receiveChannel.label);
+//   localPeerConnection.close();
+//   remotePeerConnection.close();
+//   localPeerConnection = null;
+//   remotePeerConnection = null;
+//   trace('Closed peer connections');
+//   startButton.disabled = false;
+//   sendButton.disabled = true;
+//   closeButton.disabled = true;
+//   dataChannelSend.value = "";
+//   dataChannelReceive.value = "";
+//   dataChannelSend.disabled = true;
+//   dataChannelSend.placeholder = "Press Start, enter some text, then press Send.";
+// }
 
-		}
-	});
-	var idImg = "monImage";
-	var img = document.getElementById(idImg);
+function gotReceiveChannel(event) {
+  trace('Receive Channel Callback');
+  receiveChannel = event.channel;
+  receiveChannel.onmessage = handleMessage;
+  receiveChannel.onopen = handleReceiveChannelStateChange;
+  receiveChannel.onclose = handleReceiveChannelStateChange;
+}
 
-	function openWebSocket(){
-		var socket = new WebSocket(model.WEBSOCKET_URL);
+function handleMessage(event) {
+  trace('Received message: ' + event.data);
+  receiveTextarea.value = event.data;
+}
 
-		socket.onopen = function(){
-			ready = true;
-			trace("WebSocket Open : ");
-		}
-		socket.onerror = function(error){
-			trace("WebSocket error : "+error);
-		}
-		socket.onmessage = function(message){
-			var json = JSON.parse(message.data);			
-			if (json.type === "image"){								
-				img.src = json.data;
-			}else if (json.type === "sound"){
-				
-				if (bufferSound.length == 0){
-					audio.src = json.data;
-				}
-				bufferSound.push(json.data);
-			}
-		}
-		socket.onclose = function(){
-				trace("WebSocket Close : ");
-		}
-		return socket;
-	}	
-	var socketPush = openWebSocket();
-	var socketRead = openWebSocket();
-	var ready = false;
+function handleSendChannelStateChange() {
+  var readyState = sendChannel.readyState;
+  trace('Send channel state is: ' + readyState);
+  if (readyState == "open") {
+    dataChannelSend.disabled = false;
+    dataChannelSend.focus();
+    dataChannelSend.placeholder = "";
+    sendButton.disabled = false;
+//    closeButton.disabled = false;
+  } else {
+    dataChannelSend.disabled = true;
+    sendButton.disabled = true;
+//    closeButton.disabled = true;
+  }
+}
 
+function handleReceiveChannelStateChange() {
+  var readyState = receiveChannel.readyState;
+  trace('Receive channel state is: ' + readyState);
+}
 
-	var onFail = function(e) {
-		console.log('Rejected!', e);
-	};
+function handleIceCandidate(event) {
+  console.log('handleIceCandidate event: ', event);
+  if (event.candidate) {
+    sendMessage({
+      type: 'candidate',
+      label: event.candidate.sdpMLineIndex,
+      id: event.candidate.sdpMid,
+      candidate: event.candidate.candidate});
+  } else {
+    console.log('End of candidates.');
+  }
+}
 
-	var onSuccess = function(s) {
-		var context = new webkitAudioContext();
-		var mediaStreamSource = context.createMediaStreamSource(s);
-		recorder = new Recorder(mediaStreamSource,{workerPath:'../components/recorder/recorderWorker.js'});		
-		setInterval(stopRecording,100);
-		
-	}
+function handleRemoteStreamAdded(event) {
+  console.log('Remote stream added.');
+//  reattachMediaStream(miniVideo, localVideo);
+  attachMediaStream(remoteVideo, event.stream);
+  remoteStream = event.stream;
+//  waitForRemoteVideo();
+}
 
-	window.URL = window.URL || window.webkitURL;
-	navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+function doCall() {
+  var constraints = {'optional': [], 'mandatory': {'MozDontOfferDataChannel': true}};
+  // temporary measure to remove Moz* constraints in Chrome
+  if (webrtcDetectedBrowser === 'chrome') {
+    for (var prop in constraints.mandatory) {
+      if (prop.indexOf('Moz') !== -1) {
+        delete constraints.mandatory[prop];
+      }
+     }
+   }
+  constraints = mergeConstraints(constraints, sdpConstraints);
+  console.log('Sending offer to peer, with constraints: \n' +
+    '  \'' + JSON.stringify(constraints) + '\'.');
+  pc.createOffer(setLocalAndSendMessage, null, constraints);
+}
 
-	var recorder;
-	var audio = document.querySelector('audio');
+function doAnswer() {
+  console.log('Sending answer to peer.');
+  pc.createAnswer(setLocalAndSendMessage, null, sdpConstraints);
+}
 
-	function startRecording() {
-		if (navigator.getUserMedia) {
-		  navigator.getUserMedia({audio: true}, onSuccess, onFail);
-		} else {
-		  console.log('navigator.getUserMedia not present');
-		}
-	}
+function mergeConstraints(cons1, cons2) {
+  var merged = cons1;
+  for (var name in cons2.mandatory) {
+    merged.mandatory[name] = cons2.mandatory[name];
+  }
+  merged.optional.concat(cons2.optional);
+  return merged;
+}
 
-	var canStop = true;
-	function stopRecording() {
-		if (!canStop) return;
-		recorder.stop();
-		canStop = false;
-		recorder.exportWAV(function(s) {
-			if (socketPush && ready){
-				socketPush.send(JSON.stringify({type:"sound",data:window.URL.createObjectURL(s)}));
-			}	
-			recorder.record();
-			canStop = true;
-		});
-	}
+function setLocalAndSendMessage(sessionDescription) {
+  // Set Opus as the preferred codec in SDP if Opus is present.
+  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
+  pc.setLocalDescription(sessionDescription);
+  sendMessage(sessionDescription);
+}
 
-	startRecording();
+function requestTurn(turn_url) {
+  var turnExists = false;
+  for (var i in pc_config.iceServers) {
+    if (pc_config.iceServers[i].url.substr(0, 5) === 'turn:') {
+      turnExists = true;
+      turnReady = true;
+      break;
+    }
+  }
+  if (!turnExists) {
+    console.log('Getting TURN server from ', turn_url);
+    // No TURN server. Get one from computeengineondemand.appspot.com:
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function(){
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        var turnServer = JSON.parse(xhr.responseText);
+      	console.log('Got TURN server: ', turnServer);
+        pc_config.iceServers.push({
+          'url': 'turn:' + turnServer.username + '@' + turnServer.turn,
+          'credential': turnServer.password
+        });
+        turnReady = true;
+      }
+    };
+    xhr.open('GET', turn_url, true);
+    xhr.send();
+  }
+}
 
-	    
-}])
-;
-*/
+function handleRemoteStreamAdded(event) {
+  console.log('Remote stream added.');
+ // reattachMediaStream(miniVideo, localVideo);
+  attachMediaStream(remoteVideo, event.stream);
+  remoteStream = event.stream;
+//  waitForRemoteVideo();
+}
+function handleRemoteStreamRemoved(event) {
+  console.log('Remote stream removed. Event: ', event);
+}
+
+function hangup() {
+  console.log('Hanging up.');
+  stop();
+  sendMessage('bye');
+}
+
+function handleRemoteHangup() {
+  console.log('Session terminated.');
+  stop();
+  isInitiator = false;
+}
+
+function stop() {
+  isStarted = false;
+  // isAudioMuted = false;
+  // isVideoMuted = false;
+  pc.close();
+  pc = null;
+}
+
+///////////////////////////////////////////
+
+// Set Opus as the default audio codec if it's present.
+function preferOpus(sdp) {
+  var sdpLines = sdp.split('\r\n');
+  var mLineIndex;
+  // Search for m line.
+  for (var i = 0; i < sdpLines.length; i++) {
+      if (sdpLines[i].search('m=audio') !== -1) {
+        mLineIndex = i;
+        break;
+      }
+  }
+  if (mLineIndex === null) {
+    return sdp;
+  }
+
+  // If Opus is available, set it as the default in m line.
+  for (i = 0; i < sdpLines.length; i++) {
+    if (sdpLines[i].search('opus/48000') !== -1) {
+      var opusPayload = extractSdp(sdpLines[i], /:(\d+) opus\/48000/i);
+      if (opusPayload) {
+        sdpLines[mLineIndex] = setDefaultCodec(sdpLines[mLineIndex], opusPayload);
+      }
+      break;
+    }
+  }
+
+  // Remove CN in m line and sdp.
+  sdpLines = removeCN(sdpLines, mLineIndex);
+
+  sdp = sdpLines.join('\r\n');
+  return sdp;
+}
+
+function extractSdp(sdpLine, pattern) {
+  var result = sdpLine.match(pattern);
+  return result && result.length === 2 ? result[1] : null;
+}
+
+// Set the selected codec to the first in m line.
+function setDefaultCodec(mLine, payload) {
+  var elements = mLine.split(' ');
+  var newLine = [];
+  var index = 0;
+  for (var i = 0; i < elements.length; i++) {
+    if (index === 3) { // Format of media starts from the fourth.
+      newLine[index++] = payload; // Put target payload to the first.
+    }
+    if (elements[i] !== payload) {
+      newLine[index++] = elements[i];
+    }
+  }
+  return newLine.join(' ');
+}
+
+// Strip CN from sdp before CN constraints is ready.
+function removeCN(sdpLines, mLineIndex) {
+  var mLineElements = sdpLines[mLineIndex].split(' ');
+  // Scan from end for the convenience of removing an item.
+  for (var i = sdpLines.length-1; i >= 0; i--) {
+    var payload = extractSdp(sdpLines[i], /a=rtpmap:(\d+) CN\/\d+/i);
+    if (payload) {
+      var cnPos = mLineElements.indexOf(payload);
+      if (cnPos !== -1) {
+        // Remove CN payload from m line.
+        mLineElements.splice(cnPos, 1);
+      }
+      // Remove CN line in sdp
+      sdpLines.splice(i, 1);
+    }
+  }
+
+  sdpLines[mLineIndex] = mLineElements.join(' ');
+  return sdpLines;
+}
+
