@@ -1,73 +1,7 @@
-$(function(){
-	/*
-	var onFailSoHard = function(e) {
-    	console.log('Reeeejected!', e);
-  	};
-
-  	window.URL = window.URL || window.webkitURL;
-	navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
-  	// Not showing vendor prefixes.
-  	navigator.getUserMedia(
-  			{
-  					video: {
-  						mandatory: { minWidth: 1024, minHeight: 768 }
-  					}}
-  			, function(localMediaStream) {
-	    var video = document.querySelector('#srcVideo');
-	    video.src = window.URL.createObjectURL(localMediaStream);
-
-	    var canvasElement = document.querySelector('#canvasVideo');
-	    var ctx = canvasElement.getContext('2d');
-
-
-        function snapshot(){
-		    canvasElement.width = video.videoWidth;
-        	canvasElement.height = video.videoHeight;
-        	if (localMediaStream){
-        		ctx.drawImage(video, 0,0);
-        		var imgDataBase64 = canvasElement.toDataURL();
-        		ws.emit('message', {type : 'image', data : imgDataBase64});
-        	}
-
-        	window.requestAnimationFrame(snapshot);
-        }
-
-        snapshot();
-
-	    // Note: onloadedmetadata doesn't fire in Chrome when using it with getUserMedia.
-	    // See crbug.com/110938.
-	    video.onloadedmetadata = function(e) {
-	      // Ready to go. Do some stuff.
-	    };
-	  }, onFailSoHard);
-
-
-  	
-  	var ws = io.connect('http://'+window.location.hostname+':80');
-  	ws.on('connect',function(){
-  		console.log("Ws Open");               
-    });
-  	ws.on("message", function(json){
-        if (json.type === "image"){						
-  			var img = document.querySelector("#canvasWs");
-  			img.src = json.data;
-
-        }
-    });
-*/
-
-
-});
-
 'use strict';
 
 var sendChannel, receiveChannel;
-var sendButton = document.getElementById("sendButton");
-var sendTextarea = document.getElementById("dataChannelSend");
-var receiveTextarea = document.getElementById("dataChannelReceive");
 
-sendButton.onclick = sendData;
 
 var isChannelReady;
 var isInitiator;
@@ -166,6 +100,127 @@ socket.on('message', function (message){
 var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
+var canvasRemoteElement = document.querySelector('#canvasRemoteVideo');
+var canvasLocalElement = document.querySelector('#canvasLocalVideo');
+var ctxRemote = canvasRemoteElement.getContext('2d');
+var ctxLocal = canvasLocalElement.getContext('2d');
+
+function drawEllipseByCenter(ctx, cx, cy, w, h) {
+        drawEllipse(ctx, cx - w/2.0, cy - h/2.0, w, h);
+      }
+      
+      function drawEllipse(ctx, x, y, w, h) {
+        var kappa = .5522848,
+            ox = (w / 2) * kappa, // control point offset horizontal
+            oy = (h / 2) * kappa, // control point offset vertical
+            xe = x + w,           // x-end
+            ye = y + h,           // y-end
+            xm = x + w / 2,       // x-middle
+            ym = y + h / 2;       // y-middle
+      
+        ctx.beginPath();
+        ctx.moveTo(x, ym);
+        ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
+        ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
+        ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
+        ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+var init = false;
+
+var canvas = document.getElementById('canvasLocalVideo');
+var particles = new ParticleCanvas(canvas, {x: 490});
+particles.start();
+particles.update( {
+        shape: 'circle',
+        velocity: new Vector({y: -3}),
+        xVariance: 20,
+        yVariance: 5,
+        spawnSpeed: 25,
+        generations: 100000,
+        maxParticles: 500,
+        size: 20,
+        sizeVariance: 10,
+        life: 30,
+        lifeVariance: 10,    
+        direction: 0,
+        directionVariance: 15,
+        color: '#cef',
+        opacity: 1,
+        onDraw: function(p) {
+          var y = -this.age * 3;
+          p.size *= 0.98;
+          p.color = 'rgb(255, ' + (y + 255) + ', 68)';
+          p.opacity = 0.5 - (p.age / p.life * 0.4);
+        }
+      });
+
+function snapshot(){
+    canvasRemoteElement.width = remoteVideo.videoWidth;
+    canvasRemoteElement.height = remoteVideo.videoHeight;
+    if (remoteStream){
+        ctxRemote.drawImage(remoteVideo, 0,0);        
+    }
+    canvasLocalElement.width = localVideo.videoWidth;
+    canvasLocalElement.height = localVideo.videoHeight;
+    canvasLocalElement.style.top = ((window.innerHeight - localVideo.videoHeight) / 2)+"px";
+    canvasLocalElement.style.left = ((window.innerWidth - localVideo.videoWidth) / 2)+"px";
+
+    if (localStream){
+      if (!init && canvasLocalElement.width > 0 && canvasLocalElement.height > 0){
+
+        main_init();
+        init = true;
+      }
+
+      
+
+      // Save the state, so we can undo the clipping
+      ctxLocal.save();
+   
+      // Create a circle
+      ctxLocal.beginPath();
+      //ctxLocal.arc(106, 77, 74, 0, Math.PI * 2, false);
+      //drawEllipse(ctxLocal, localVideo.videoWidth / 4, 0, localVideo.videoWidth / 2, localVideo.videoHeight);
+      drawEllipse(ctxLocal, 0, 0, localVideo.videoWidth, localVideo.videoHeight );
+      //drawEllipse(ctxLocal, 200, 0, 200, 400);
+      /*var cx = localVideo.width / 2, 
+          rx = localVideo.width / 2,
+          cy = 0,
+          ry = localVideo.height;
+          cx = 200;
+          rx = 200;
+          cy = 0;
+          ry = 400;
+      ctxLocal.translate(cx-rx, cy-ry);
+      ctxLocal.scale(rx, ry);
+      ctxLocal.arc(1, 1, 1, 0, 2 * Math.PI, false);
+      ctxLocal.stroke();*/
+
+
+   
+      // Clip to the current path
+      ctxLocal.clip();
+
+
+   
+      if (init){
+        drawScene();
+      }
+      ctxLocal.drawImage(localVideo, 0, 0);
+   
+      // Undo the clipping
+      ctxLocal.restore();
+
+      //ctxLocal.drawImage(localVideo, 0,0);        
+    }
+
+    window.requestAnimationFrame(snapshot);
+}
+
+
 function handleUserMedia(stream) {
   localStream = stream;
   attachMediaStream(localVideo, stream);
@@ -182,9 +237,17 @@ function handleUserMediaError(error){
 
 var constraints = {video: true};
 
-navigator.getUserMedia(constraints, handleUserMedia, handleUserMediaError);
+
+// On appel le user Media
+navigator.getUserMedia(constraints, // Contraintes De vidéos
+  handleUserMedia,  // En cas de succès
+  handleUserMediaError // En cas d'erreur
+  );
 console.log('Getting user media with constraints', constraints);
 
+snapshot();
+console.log('Getting snapshot', constraints);
+// On fait appel au serveur turn pour l'authent
 requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
 
 function maybeStart() {
@@ -237,12 +300,6 @@ function createPeerConnection() {
   }
 }
 
-function sendData() {
-  var data = sendTextarea.value;
-  sendChannel.send(data);
-  trace('Sent data: ' + data);
-}
-
 // function closeDataChannels() {
 //   trace('Closing data channels');
 //   sendChannel.close();
@@ -255,12 +312,8 @@ function sendData() {
 //   remotePeerConnection = null;
 //   trace('Closed peer connections');
 //   startButton.disabled = false;
-//   sendButton.disabled = true;
 //   closeButton.disabled = true;
-//   dataChannelSend.value = "";
 //   dataChannelReceive.value = "";
-//   dataChannelSend.disabled = true;
-//   dataChannelSend.placeholder = "Press Start, enter some text, then press Send.";
 // }
 
 function gotReceiveChannel(event) {
@@ -279,17 +332,7 @@ function handleMessage(event) {
 function handleSendChannelStateChange() {
   var readyState = sendChannel.readyState;
   trace('Send channel state is: ' + readyState);
-  if (readyState == "open") {
-    dataChannelSend.disabled = false;
-    dataChannelSend.focus();
-    dataChannelSend.placeholder = "";
-    sendButton.disabled = false;
-//    closeButton.disabled = false;
-  } else {
-    dataChannelSend.disabled = true;
-    sendButton.disabled = true;
-//    closeButton.disabled = true;
-  }
+  
 }
 
 function handleReceiveChannelStateChange() {

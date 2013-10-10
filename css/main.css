@@ -2,3 +2,15 @@ body{
 	background-color:black;
 
 }
+
+#videos{
+	margin: auto;
+	
+}
+
+canvas{
+	/*transform:rotate(90deg);
+	-webkit-transform:rotate(90deg); */
+	position: absolute;
+	
+}

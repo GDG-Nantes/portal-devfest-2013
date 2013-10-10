@@ -13,28 +13,32 @@
     <video id="srcVideo" autoplay></video>
 
     
-    <canvas id="canvasVideo" style="display:none;"></canvas>
-    <img id="canvasWs" ></img>
 
     <div id='container'>
 
 	  <div id='videos'>
-	    <video id='localVideo' autoplay muted></video>
-	    <video id='remoteVideo' autoplay></video>
+	    <video id='localVideo' autoplay muted style="display:none;"></video>
+	    <video id='remoteVideo' autoplay muted style="display:none;"></video>
+	    <canvas id="canvasLocalVideo" ></canvas>
+	    <canvas id="canvasRemoteVideo"></canvas>
 	  </div>
-
-	  <div id='textareas'>
-			<textarea id="dataChannelSend" disabled placeholder="Press Start, enter some text, then press Send."></textarea>
-			<textarea id="dataChannelReceive" disabled></textarea>
-		</div>
-
-	  <button id="sendButton" disabled>Send</button>
-
+	  
 	</div>
+<!--
+	<svg width="0" height="0">
+		<defs>
+		<clipPath id="clip4">
+			<ellipse cx="284" cy="213" rx="284" ry="213"></ellipse>
+		</clipPath>		
+		</defs>
+	</svg>-->
 
 	<script src='/socket.io/socket.io.js'></script>
 	<script src='js/lib/adapter.js'></script>
+	<script src='js/particleCanvas.js'></script>
+	<script src='js/fire.js'></script>
 	<script src='js/app.js'></script>
+
 
 	</body>
 </html>
