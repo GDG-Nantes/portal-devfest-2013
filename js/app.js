@@ -102,8 +102,10 @@ var remoteVideo = document.querySelector('#remoteVideo');
 
 var canvasRemoteElement = document.querySelector('#canvasRemoteVideo');
 var canvasLocalElement = document.querySelector('#canvasLocalVideo');
+var canvasFireElement = document.querySelector('#canvasFireLocalVideo');
 var ctxRemote = canvasRemoteElement.getContext('2d');
 var ctxLocal = canvasLocalElement.getContext('2d');
+var ctxFire = canvasFireElement.getContext('2d');
 
 function drawEllipseByCenter(ctx, cx, cy, w, h) {
         drawEllipse(ctx, cx - w/2.0, cy - h/2.0, w, h);
@@ -130,6 +132,7 @@ function drawEllipseByCenter(ctx, cx, cy, w, h) {
 
 var init = false;
 
+/*
 var canvas = document.getElementById('canvasLocalVideo');
 var particles = new ParticleCanvas(canvas, {x: 490});
 particles.start();
@@ -155,7 +158,7 @@ particles.update( {
           p.color = 'rgb(255, ' + (y + 255) + ', 68)';
           p.opacity = 0.5 - (p.age / p.life * 0.4);
         }
-      });
+      });*/
 
 function snapshot(){
     canvasRemoteElement.width = remoteVideo.videoWidth;
@@ -163,58 +166,66 @@ function snapshot(){
     if (remoteStream){
         ctxRemote.drawImage(remoteVideo, 0,0);        
     }
-    canvasLocalElement.width = localVideo.videoWidth;
-    canvasLocalElement.height = localVideo.videoHeight;
-    canvasLocalElement.style.top = ((window.innerHeight - localVideo.videoHeight) / 2)+"px";
-    canvasLocalElement.style.left = ((window.innerWidth - localVideo.videoWidth) / 2)+"px";
+    canvasLocalElement.width = localVideo.videoWidth + 100;
+    canvasLocalElement.height = localVideo.videoHeight + 50;
+    canvasLocalElement.style.top = ((window.innerHeight - canvasLocalElement.height) / 2)+"px";
+    canvasLocalElement.style.left = ((window.innerWidth - canvasLocalElement.width) / 2)+"px";
+
+    canvasFireElement.width = localVideo.videoWidth + 100;
+    canvasFireElement.height = localVideo.videoHeight + 50;
+    canvasFireElement.style.top = ((window.innerHeight - canvasFireElement.height) / 2)+"px";
+    canvasFireElement.style.left = ((window.innerWidth - canvasFireElement.width) / 2)+"px";
 
     if (localStream){
-      if (!init && canvasLocalElement.width > 0 && canvasLocalElement.height > 0){
+      if (!init 
+          && canvasLocalElement.width == (localVideo.videoWidth + 100) 
+          && canvasLocalElement.height == (localVideo.videoHeight + 50)
+          && canvasFireElement.width == (localVideo.videoWidth + 100) 
+          && canvasFireElement.height == (localVideo.videoHeight + 50)){
 
-        main_init();
-        init = true;
+
+        /*main_init();*/
+        if (canvasFireElement.width != 100){
+
+          init = true;
+          canvasDemo.canvas = document.getElementById('canvasFireLocalVideo');
+          canvasDemo.init();
+        }
       }
 
+      var deltaX = 0, deltaY = 0;
       
+
+
+      ctxFire.save();
+      ctxFire.beginPath();
+      var delta = 30;
+      deltaX =  (canvasFireElement.width - delta - localVideo.videoWidth) / 2;
+      deltaY =  (canvasFireElement.height - delta - localVideo.videoHeight) / 2;
+      drawEllipse(ctxFire, deltaX, deltaY, localVideo.videoWidth + delta, localVideo.videoHeight +delta);
+      // Clip to the current path
+      ctxFire.clip(); 
+   // Undo the clipping
+      if (init){
+        canvasDemo.refresh();
+      }
+      ctxFire.restore();
 
       // Save the state, so we can undo the clipping
       ctxLocal.save();
-   
-      // Create a circle
       ctxLocal.beginPath();
-      //ctxLocal.arc(106, 77, 74, 0, Math.PI * 2, false);
-      //drawEllipse(ctxLocal, localVideo.videoWidth / 4, 0, localVideo.videoWidth / 2, localVideo.videoHeight);
-      drawEllipse(ctxLocal, 0, 0, localVideo.videoWidth, localVideo.videoHeight );
-      //drawEllipse(ctxLocal, 200, 0, 200, 400);
-      /*var cx = localVideo.width / 2, 
-          rx = localVideo.width / 2,
-          cy = 0,
-          ry = localVideo.height;
-          cx = 200;
-          rx = 200;
-          cy = 0;
-          ry = 400;
-      ctxLocal.translate(cx-rx, cy-ry);
-      ctxLocal.scale(rx, ry);
-      ctxLocal.arc(1, 1, 1, 0, 2 * Math.PI, false);
-      ctxLocal.stroke();*/
-
-
-   
+      deltaX =  (canvasLocalElement.width - localVideo.videoWidth) / 2;
+      deltaY =  (canvasLocalElement.height - localVideo.videoHeight) / 2;
+      drawEllipse(ctxLocal, deltaX , deltaY, localVideo.videoWidth , localVideo.videoHeight);
       // Clip to the current path
       ctxLocal.clip();
-
-
-   
-      if (init){
-        drawScene();
-      }
-      ctxLocal.drawImage(localVideo, 0, 0);
-   
+      ctxLocal.drawImage(localVideo, deltaX, deltaY);
       // Undo the clipping
       ctxLocal.restore();
 
-      //ctxLocal.drawImage(localVideo, 0,0);        
+
+
+      
     }
 
     window.requestAnimationFrame(snapshot);
@@ -235,7 +246,7 @@ function handleUserMediaError(error){
   console.log('navigator.getUserMedia error: ', error);
 }
 
-var constraints = {video: true};
+var constraints = {video: true,   maxWidth: 1280, maxHeight: 720};
 
 
 // On appel le user Media
