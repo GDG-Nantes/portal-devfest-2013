@@ -22,8 +22,8 @@ var canvasDemo = new function()
     {
         context = this.canvas.getContext('2d');
 
-        width = this.canvas.width / scale;
-        height = this.canvas.height / scale;
+        width = Math.round(this.canvas.width / scale);
+        height = Math.round(this.canvas.height / scale);
 
         colorMap = Array(width * height);
 
@@ -47,6 +47,10 @@ var canvasDemo = new function()
             palette[i + 64] = [255, (i << 2), 0];
             palette[i + 128] = [255, 255, (i << 2)];
             palette[i + 192] = [255, 255, 255];
+            /* Tentative bleu 
+            palette[i + 64] = [(i << 2), 255, 255];
+            palette[i + 128] = [0, (i << 2), 255];
+            palette[i + 192] = [255, 255, 255];*/
         }
     };
 
@@ -126,9 +130,18 @@ var canvasDemo = new function()
         // render the image data to the offscreen buffer...
         bufferContext.putImageData(imageData, 0, 0);
         // ...then draw it to scale to the onscreen canvas
-        context.drawImage(buffer, 0, 0, width * scale, height * scale);
+        /*context.drawImage(buffer, 0, 0, width * scale, height * scale);
         context.translate((width * scale) - 1, (height * scale)-1);
         context.rotate(Math.PI);
+        context.drawImage(buffer, 0, 0, width * scale, height * scale);
+        context.rotate(-Math.PI);*/
+        context.translate(height*scale, 0);
+        context.rotate(90 * Math.PI / 180);
+        context.drawImage(buffer, 0, 0, width * scale, height * scale);
+        context.rotate(-90 * Math.PI / 180);
+        context.translate(-height*scale, 0);
+        context.translate(width / scale, width * scale);
+        context.rotate(-90 * Math.PI / 180);
         context.drawImage(buffer, 0, 0, width * scale, height * scale);
         
     };

@@ -197,19 +197,19 @@ function snapshot(){
       
 
 
-      ctxFire.save();
+      /*ctxFire.save();
       ctxFire.beginPath();
       var delta = 30;
       deltaX =  (canvasFireElement.width - delta - localVideo.videoWidth) / 2;
       deltaY =  (canvasFireElement.height - delta - localVideo.videoHeight) / 2;
       drawEllipse(ctxFire, deltaX, deltaY, localVideo.videoWidth + delta, localVideo.videoHeight +delta);
       // Clip to the current path
-      ctxFire.clip(); 
+      ctxFire.clip(); */
    // Undo the clipping
       if (init){
         canvasDemo.refresh();
       }
-      ctxFire.restore();
+      //ctxFire.restore();
 
       // Save the state, so we can undo the clipping
       ctxLocal.save();
