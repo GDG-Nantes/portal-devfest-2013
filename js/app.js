@@ -132,34 +132,6 @@ function drawEllipseByCenter(ctx, cx, cy, w, h) {
 
 var init = false;
 
-/*
-var canvas = document.getElementById('canvasLocalVideo');
-var particles = new ParticleCanvas(canvas, {x: 490});
-particles.start();
-particles.update( {
-        shape: 'circle',
-        velocity: new Vector({y: -3}),
-        xVariance: 20,
-        yVariance: 5,
-        spawnSpeed: 25,
-        generations: 100000,
-        maxParticles: 500,
-        size: 20,
-        sizeVariance: 10,
-        life: 30,
-        lifeVariance: 10,    
-        direction: 0,
-        directionVariance: 15,
-        color: '#cef',
-        opacity: 1,
-        onDraw: function(p) {
-          var y = -this.age * 3;
-          p.size *= 0.98;
-          p.color = 'rgb(255, ' + (y + 255) + ', 68)';
-          p.opacity = 0.5 - (p.age / p.life * 0.4);
-        }
-      });*/
-
 function snapshot(){
     canvasRemoteElement.width = remoteVideo.videoWidth;
     canvasRemoteElement.height = remoteVideo.videoHeight;
@@ -197,19 +169,19 @@ function snapshot(){
       
 
 
-      /*ctxFire.save();
+      ctxFire.save();
       ctxFire.beginPath();
       var delta = 30;
       deltaX =  (canvasFireElement.width - delta - localVideo.videoWidth) / 2;
       deltaY =  (canvasFireElement.height - delta - localVideo.videoHeight) / 2;
       drawEllipse(ctxFire, deltaX, deltaY, localVideo.videoWidth + delta, localVideo.videoHeight +delta);
       // Clip to the current path
-      ctxFire.clip(); */
+      ctxFire.clip(); 
    // Undo the clipping
       if (init){
         canvasDemo.refresh();
       }
-      //ctxFire.restore();
+      ctxFire.restore();
 
       // Save the state, so we can undo the clipping
       ctxLocal.save();

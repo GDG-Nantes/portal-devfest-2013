@@ -15,11 +15,15 @@ var canvasDemo = new function()
     var start = new Date();
     var frames = 0;
     var slack = 5;
+    var color = 'red';
 
     this.canvas = undefined;
 
-    this.init = function()
+    this.init = function(colorToApply)
     {
+        if (colorToApply){
+            color = colorToApply;
+        }
         context = this.canvas.getContext('2d');
 
         width = Math.round(this.canvas.width / scale);
@@ -43,14 +47,19 @@ var canvasDemo = new function()
 
         for(var i = 0; i < 64; i++)
         {
-            palette[i] = [(i << 2), 0, 0];
-            palette[i + 64] = [255, (i << 2), 0];
-            palette[i + 128] = [255, 255, (i << 2)];
-            palette[i + 192] = [255, 255, 255];
-            /* Tentative bleu 
-            palette[i + 64] = [(i << 2), 255, 255];
-            palette[i + 128] = [0, (i << 2), 255];
-            palette[i + 192] = [255, 255, 255];*/
+            if (color === 'red'){
+                palette[i] = [(i << 2), 0, 0];
+                palette[i + 64] = [255, (i << 2), 0];
+                palette[i + 128] = [255, 255, (i << 2)];
+                palette[i + 192] = [255, 255, 255];
+            }else if (color === 'blue') {
+
+                /* Tentative bleu */
+                palette[i] = [0, 0, (i << 2)];
+                palette[i + 64] = [0, (i << 2), 255];
+                palette[i + 128] = [0, 128, 100+(i << 2)];
+                palette[i + 192] = [0, 128, 255];
+            }
         }
     };
 
@@ -130,21 +139,32 @@ var canvasDemo = new function()
         // render the image data to the offscreen buffer...
         bufferContext.putImageData(imageData, 0, 0);
         // ...then draw it to scale to the onscreen canvas
-        /*context.drawImage(buffer, 0, 0, width * scale, height * scale);
-        context.translate((width * scale) - 1, (height * scale)-1);
-        context.rotate(Math.PI);
+        // Image de base en bas !
         context.drawImage(buffer, 0, 0, width * scale, height * scale);
-        context.rotate(-Math.PI);*/
+
+        // image quart droite
         context.translate(height*scale, 0);
         context.rotate(90 * Math.PI / 180);
         context.drawImage(buffer, 0, 0, width * scale, height * scale);
+        //Annulation mouvement
         context.rotate(-90 * Math.PI / 180);
         context.translate(-height*scale, 0);
+
+        // Image inversée
+        context.translate((width * scale) - 1, (height * scale)-1);
+        context.rotate(Math.PI);
+        context.drawImage(buffer, 0, 0, width * scale, height * scale);
+        //Annulation
+        context.rotate(-Math.PI);
+        context.translate(-(width * scale) + 1, -(height * scale)+1);
+                
+        // Image quart gauche
         context.translate(width / scale, width * scale);
         context.rotate(-90 * Math.PI / 180);
         context.drawImage(buffer, 0, 0, width * scale, height * scale);
         
     };
+
 
     // set pixels in imageData
     var drawPixel = function(x, y, color)
@@ -154,11 +174,12 @@ var canvasDemo = new function()
         imageData.data[offset] = color[0];
         imageData.data[offset + 1] = color[1];
         imageData.data[offset + 2] = color[2];
-        if (color[0] === 0 && color[1] === 0 && color[2] === 0){
+        if (color[0] <= 100 && color[1] === 0 && color[2] <= 100){
         	imageData.data[offset + 3] = 0;
         }else{
         	imageData.data[offset + 3] = 255;
         }
+
     };
 
     var clear = function()
