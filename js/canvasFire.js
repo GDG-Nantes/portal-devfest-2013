@@ -141,7 +141,18 @@ var canvasDemo = new function()
         // ...then draw it to scale to the onscreen canvas
         // Image de base en bas !
         context.drawImage(buffer, 0, 0, width * scale, height * scale);
+/*
+        var degree = 45;
+        var rad = degree * Math.PI / 180;
+        var fullWidth = width * scale;
+        var fullHeight = height * scale;
 
+        context.translate(fullWidth / 2, fullHeight / 2);
+        context.rotate(rad);
+        context.translate(-fullWidth / 2, -fullHeight / 2);
+        context.drawImage(buffer, 0, 0, width * scale, height * scale);
+*/
+        
         // image quart droite
         context.translate(height*scale, 0);
         context.rotate(90 * Math.PI / 180);

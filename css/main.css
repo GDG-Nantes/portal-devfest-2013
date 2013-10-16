@@ -9,8 +9,37 @@ body{
 }
 
 canvas{
-	/*transform:rotate(90deg);
-	-webkit-transform:rotate(90deg); */
+	transform:rotate(90deg);
+	-webkit-transform:rotate(90deg); 
 	position: absolute;
 	
+}
+
+
+#test, #canvasFireLocalVideo{
+   	-webkit-animation-name: spin;
+    -webkit-animation-duration: 8000ms;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: linear;
+
+ 	animation-name: spin;
+    animation-duration: 8000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+
+@-webkit-keyframes spin 
+{
+    from { -webkit-transform: rotate(0deg); }
+    to { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin 
+{
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
 }
