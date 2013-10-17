@@ -137,9 +137,9 @@ function snapshot(){
     var contextToUse = ctxRemote;
     var videoToUse = remoteVideo;
 
-    canvasToUse = canvasLocalElement;
+/*    canvasToUse = canvasLocalElement;
     contextToUse = ctxLocal;
-    videoToUse =localVideo;
+    videoToUse =localVideo;*/
 
     canvasRemoteElement.width = remoteVideo.videoWidth;
     canvasRemoteElement.height = remoteVideo.videoHeight;
@@ -148,13 +148,13 @@ function snapshot(){
     }
     canvasToUse.width = videoToUse.videoWidth + 100;
     canvasToUse.height = canvasToUse.width;
-    canvasToUse.style.top = ((window.innerHeight - canvasToUse.height) / 2)+"px";
-    canvasToUse.style.left = ((window.innerWidth - canvasToUse.width) / 2)+"px";
+    canvasToUse.style.top = ((canvasToUse.parentElement.clientHeight - canvasToUse.height) / 2)+"px";
+    canvasToUse.style.left = ((canvasToUse.parentElement.clientWidth - canvasToUse.width) / 2)+"px";
 
     canvasFireElement.width = videoToUse.videoWidth + 100;
     canvasFireElement.height = canvasFireElement.width;
-    canvasFireElement.style.top = ((window.innerHeight - canvasFireElement.height) / 2)+"px";
-    canvasFireElement.style.left = ((window.innerWidth - canvasFireElement.width) / 2)+"px";
+    canvasFireElement.style.top = ((canvasToUse.parentElement.clientHeight - canvasFireElement.height) / 2)+"px";
+    canvasFireElement.style.left = ((canvasToUse.parentElement.clientWidth - canvasFireElement.width) / 2)+"px";
 
     if (localStream){
       if (!init 
