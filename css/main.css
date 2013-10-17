@@ -9,6 +9,7 @@ body{
 }
 
 canvas{
+    
 	transform:rotate(90deg);
 	-webkit-transform:rotate(90deg); 
 	position: absolute;
@@ -16,16 +17,18 @@ canvas{
 }
 
 
-#test, #canvasFireLocalVideo{
+#canvasFireLocalVideo{
+    /*background-color: white;*/
+    /*
    	-webkit-animation-name: spin;
-    -webkit-animation-duration: 8000ms;
+    -webkit-animation-duration: 16000ms;
     -webkit-animation-iteration-count: infinite;
     -webkit-animation-timing-function: linear;
 
  	animation-name: spin;
-    animation-duration: 8000ms;
+    animation-duration: 16000ms;
     animation-iteration-count: infinite;
-    animation-timing-function: linear;
+    animation-timing-function: linear;*/
 }
 
 @-webkit-keyframes spin 

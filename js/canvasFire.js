@@ -11,15 +11,20 @@ var canvasDemo = new function()
     var width;
     var height;
     var scale = 2;
-    var fan = 3.5;
+    var fan = 2.4;
     var start = new Date();
     var frames = 0;
     var slack = 5;
     var color = 'red';
+    var dims = {};
+    var timeOut = 7;
+    var angleInc = 360 / (timeOut * 100);
+    var angle = 0;
+    var lastTime = 0;
 
     this.canvas = undefined;
 
-    this.init = function(colorToApply)
+    this.init = function(colorToApply, dim)
     {
         if (colorToApply){
             color = colorToApply;
@@ -28,6 +33,12 @@ var canvasDemo = new function()
 
         width = Math.round(this.canvas.width / scale);
         height = Math.round(this.canvas.height / scale);
+        
+        if (dim){
+            dims = dim;
+        }else{
+            dims = {width: width, height : height};
+        }
 
         colorMap = Array(width * height);
 
@@ -133,6 +144,24 @@ var canvasDemo = new function()
         }
     };
 
+    var drawAngle = function(angleDegree){
+        var rad = angleDegree * Math.PI / 180;
+        var fullWidth = width * scale;
+        var fullHeight = height * scale;
+
+        context.translate(fullWidth / 2, fullHeight / 2);
+        context.rotate(rad);
+        context.translate(-fullWidth / 2, -fullHeight / 2);
+        var trY = Math.abs(Math.cos(rad))*((fullHeight - dims.height) / 2);
+        context.translate(0,-trY);
+        context.drawImage(buffer, 0, 0, width * scale, height * scale);
+        // On doit revenir en arriere sur le mouvement pour traiter un nouvel angle
+        context.translate(0,trY);
+        context.translate(fullWidth / 2, fullHeight / 2);
+        context.rotate(-rad);
+        context.translate(-fullWidth / 2, -fullHeight / 2);
+    }
+
     // draw colormap->palette values to screen
     var draw = function()
     {
@@ -140,8 +169,11 @@ var canvasDemo = new function()
         bufferContext.putImageData(imageData, 0, 0);
         // ...then draw it to scale to the onscreen canvas
         // Image de base en bas !
+    /*    context.translate(0, (height*scale/2));
         context.drawImage(buffer, 0, 0, width * scale, height * scale);
-/*
+        context.translate(0, -(height*scale/2));*/
+
+        /*
         var degree = 45;
         var rad = degree * Math.PI / 180;
         var fullWidth = width * scale;
@@ -150,8 +182,24 @@ var canvasDemo = new function()
         context.translate(fullWidth / 2, fullHeight / 2);
         context.rotate(rad);
         context.translate(-fullWidth / 2, -fullHeight / 2);
+        context.translate(0,-Math.abs(Math.cos(rad))*((fullHeight - dims.height) / 2));
         context.drawImage(buffer, 0, 0, width * scale, height * scale);
-*/
+        */
+
+       
+
+
+        var timeStamp = new Date().getTime();
+        angle += angleInc * ((lastTime - timeStamp) / 100);
+        angle = angle % 360;
+        lastTime = timeStamp;
+
+        drawAngle(angle);
+        drawAngle(angle+90);
+        drawAngle(angle+180);
+        drawAngle(angle+270);
+
+/*
         
         // image quart droite
         context.translate(height*scale, 0);
@@ -173,7 +221,7 @@ var canvasDemo = new function()
         context.translate(width / scale, width * scale);
         context.rotate(-90 * Math.PI / 180);
         context.drawImage(buffer, 0, 0, width * scale, height * scale);
-        
+  */      
     };
 
 
