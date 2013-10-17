@@ -137,6 +137,10 @@ function snapshot(){
     var contextToUse = ctxRemote;
     var videoToUse = remoteVideo;
 
+    canvasToUse = canvasLocalElement;
+    contextToUse = ctxLocal;
+    videoToUse =localVideo;
+
     canvasRemoteElement.width = remoteVideo.videoWidth;
     canvasRemoteElement.height = remoteVideo.videoHeight;
     if (remoteStream){
@@ -186,6 +190,7 @@ function snapshot(){
         canvasDemo.refresh();
       }
       ctxFire.restore();
+     
 
       // Save the state, so we can undo the clipping
       contextToUse.save();

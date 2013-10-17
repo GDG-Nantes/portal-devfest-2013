@@ -1,11 +1,63 @@
 body{
 	background-color:black;
+    font-family: "portalportal";
+    text-align: center;
+    color: #636468;
 
 }
 
 #videos{
-	margin: auto;
-	
+    margin: auto;
+    
+}
+
+header{
+    position: absolute;
+    left: 50%;
+    margin-left: -461px;    
+    top: -10px;
+    font-size: 40px;
+    /*border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    border-top-style: none;
+    border-style: solid;
+    border-width: 2px;
+    border-color: white;*/
+    background-image: url(../assets/images/navigation_bg.png);
+    background-repeat: no-repeat;
+    height: 147px;
+    width: 530px;
+    padding-left: 27px;
+    padding-right: 400px;
+    padding-top: 30px;
+    text-align: right;
+}
+
+header .portalImg{
+    background-image : url(../assets/images/portal2.png);
+    background-repeat: no-repeat;
+    height: 100px;
+    width:100px;
+    position: absolute;
+    right: 50px;
+    top: 10;
+}
+
+
+#container{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+
+}
+
+footer{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin-bottom: 10px;
+    width: 100%;
+    font-size: 14px;
 }
 
 canvas{
