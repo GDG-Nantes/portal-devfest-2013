@@ -137,39 +137,45 @@ function snapshot(){
     var contextToUse = ctxRemote;
     var videoToUse = remoteVideo;
 
-/*    canvasToUse = canvasLocalElement;
+    canvasToUse = canvasLocalElement;
     contextToUse = ctxLocal;
-    videoToUse =localVideo;*/
+    videoToUse =localVideo;
 
     canvasRemoteElement.width = remoteVideo.videoWidth;
     canvasRemoteElement.height = remoteVideo.videoHeight;
     if (remoteStream){
         ctxRemote.drawImage(remoteVideo, 0,0);        
     }
-    canvasToUse.width = videoToUse.videoWidth + 100;
+
+    var delta = 50;
+    var idealWidth = Math.min(canvasToUse.parentElement.clientHeight, videoToUse.videoWidth + 100);
+    var minVideoWidth = Math.min(canvasToUse.parentElement.clientHeight - 50, videoToUse.videoWidth);
+    var ratio = videoToUse.videoWidth / videoToUse.videoHeight;
+    var idealHeight = Math.min(idealWidth / ratio, videoToUse.videoHeight);
+    var useVideoWidth = idealWidth === videoToUse.videoWidth + 100;
+
+    canvasToUse.width = idealWidth;
     canvasToUse.height = canvasToUse.width;
     canvasToUse.style.top = ((canvasToUse.parentElement.clientHeight - canvasToUse.height) / 2)+"px";
     canvasToUse.style.left = ((canvasToUse.parentElement.clientWidth - canvasToUse.width) / 2)+"px";
 
-    canvasFireElement.width = videoToUse.videoWidth + 100;
+    canvasFireElement.width = idealWidth;
     canvasFireElement.height = canvasFireElement.width;
     canvasFireElement.style.top = ((canvasToUse.parentElement.clientHeight - canvasFireElement.height) / 2)+"px";
     canvasFireElement.style.left = ((canvasToUse.parentElement.clientWidth - canvasFireElement.width) / 2)+"px";
 
     if (localStream){
       if (!init 
-          && canvasToUse.width == (videoToUse.videoWidth + 100) 
-          && canvasToUse.height == (videoToUse.videoWidth + 100)
-          && canvasFireElement.width == (videoToUse.videoWidth + 100) 
-          && canvasFireElement.height == (videoToUse.videoWidth + 100)){
+          && canvasToUse.width == idealWidth 
+          && canvasToUse.height == idealWidth
+          && canvasFireElement.width == idealWidth 
+          && canvasFireElement.height == idealWidth){
 
-
-        /*main_init();*/
         if (canvasFireElement.width != 100){
 
           init = true;
           canvasDemo.canvas = document.getElementById('canvasFireLocalVideo');
-          canvasDemo.init(isInitiator ? 'red' : 'blue', {width :videoToUse.videoWidth, height : videoToUse.videoHeight + 130});
+          canvasDemo.init(isInitiator ? 'red' : 'blue', {width :minVideoWidth, height : idealHeight + 100});
         }
       }
 
@@ -179,10 +185,11 @@ function snapshot(){
 
       ctxFire.save();
       ctxFire.beginPath();
-      var delta = 50;
-      deltaX =  (canvasFireElement.width - delta - videoToUse.videoWidth) / 2;
-      deltaY =  (canvasFireElement.height - delta - videoToUse.videoHeight) / 2;
-      drawEllipse(ctxFire, deltaX, deltaY, videoToUse.videoWidth + delta, videoToUse.videoHeight +delta);
+      
+      deltaX =  (canvasFireElement.width - minVideoWidth) / 2;
+      deltaY =  (canvasFireElement.height- idealHeight) / 2;
+      ctxFire.fillStyle = "rgba(0, 0, 0, 0)";
+      drawEllipse(ctxFire, deltaX, deltaY, minVideoWidth, idealHeight);
       // Clip to the current path
       ctxFire.clip(); 
       // Undo the clipping
@@ -195,17 +202,15 @@ function snapshot(){
       // Save the state, so we can undo the clipping
       contextToUse.save();
       contextToUse.beginPath();
-      deltaX =  (canvasToUse.width - videoToUse.videoWidth) / 2;
-      deltaY =  (canvasToUse.height - videoToUse.videoHeight) / 2;
-      drawEllipse(contextToUse, deltaX , deltaY, videoToUse.videoWidth , videoToUse.videoHeight);
+      deltaX =  (canvasToUse.width - minVideoWidth +delta) / 2;
+      deltaY =  (canvasToUse.height - idealHeight+delta) / 2;
+      contextToUse.fillStyle = "rgba(0, 0, 0, 0)";
+      drawEllipse(contextToUse, deltaX , deltaY, minVideoWidth-delta , idealHeight-delta);
       // Clip to the current path
       contextToUse.clip();
-      contextToUse.drawImage(videoToUse, deltaX, deltaY);
+      contextToUse.drawImage(videoToUse,0,0, videoToUse.videoWidth, videoToUse.videoHeight, deltaX, deltaY, minVideoWidth, idealHeight);
       // Undo the clipping
       contextToUse.restore();
-
-
-
       
     }
 
