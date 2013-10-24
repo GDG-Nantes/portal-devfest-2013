@@ -107,6 +107,7 @@ var ctxRemote = canvasRemoteElement.getContext('2d');
 var ctxLocal = canvasLocalElement.getContext('2d');
 var ctxFire = canvasFireElement.getContext('2d');
 
+
 function drawEllipseByCenter(ctx, cx, cy, w, h) {
   drawEllipse(ctx, cx - w/2.0, cy - h/2.0, w, h);
 }

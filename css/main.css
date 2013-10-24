@@ -13,7 +13,7 @@ body{
 
 header{
     position: absolute;
-    left: 50%;
+    left: 0;
     margin-left: -461px;    
     top: -40px;
     font-size: 40px;
@@ -55,7 +55,7 @@ footer{
     background-repeat: no-repeat;
     position: absolute;
     bottom: 0;
-    left: 50%;
+    right: 0;
     margin-left: -461px;	
     width: 923px;
     font-size: 14px;
