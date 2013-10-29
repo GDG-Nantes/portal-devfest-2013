@@ -13,7 +13,7 @@ body{
 
 header{
     position: absolute;
-    left: 0;
+    left: 45px;
     margin-left: -461px;    
     top: -40px;
     font-size: 40px;
@@ -53,11 +53,12 @@ header .portalImg{
 footer{
 	background-image: url(../assets/images/showcase_bg.png);
     background-repeat: no-repeat;
+    background-size: 750px;
     position: absolute;
     bottom: 0;
-    right: 0;
+    right: calc(-75% / 2 + 60px);
     margin-left: -461px;	
-    width: 923px;
+    width: 750px;
     font-size: 14px;
     line-height: 60px;
     height: 60px;
