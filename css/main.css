@@ -65,8 +65,8 @@ footer{
 
 canvas{
     
-	transform:rotate(90deg);
-	-webkit-transform:rotate(90deg); 
+	/*transform:rotate(90deg);
+	-webkit-transform:rotate(90deg); */
 	position: absolute;
 	
 }

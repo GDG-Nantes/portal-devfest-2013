@@ -138,9 +138,9 @@ function snapshot(){
     var contextToUse = ctxRemote;
     var videoToUse = remoteVideo;
 
-    canvasToUse = canvasLocalElement;
+    /*canvasToUse = canvasLocalElement;
     contextToUse = ctxLocal;
-    videoToUse =localVideo;
+    videoToUse =localVideo;*/
 
     canvasRemoteElement.width = remoteVideo.videoWidth;
     canvasRemoteElement.height = remoteVideo.videoHeight;
@@ -149,8 +149,8 @@ function snapshot(){
     }
 
     var delta = 50;
-    var idealWidth = Math.min(canvasToUse.parentElement.clientHeight, videoToUse.videoWidth + 100);
-    var minVideoWidth = Math.min(canvasToUse.parentElement.clientHeight - 50, videoToUse.videoWidth);
+    var idealWidth = Math.min(canvasToUse.parentElement.clientWidth, videoToUse.videoWidth + 100);
+    var minVideoWidth = Math.min(canvasToUse.parentElement.clientWidth - 50, videoToUse.videoWidth);
     var ratio = videoToUse.videoWidth / videoToUse.videoHeight;
     var idealHeight = Math.min(idealWidth / ratio, videoToUse.videoHeight);
     var useVideoWidth = idealWidth === videoToUse.videoWidth + 100;
