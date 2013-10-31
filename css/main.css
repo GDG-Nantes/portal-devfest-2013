@@ -4,6 +4,7 @@ body{
     text-align: center;
     color: #636468;
     margin: 0;
+    overflow: hidden;
 }
 
 #videos{
@@ -13,17 +14,22 @@ body{
 
 header{
     position: absolute;
-    left: 45px;
-    margin-left: -461px;    
-    top: -40px;
+    left: -342px;
+    top: -100px;
     font-size: 40px;
     background-image: url(../assets/images/navigation_bg.png);
     background-repeat: no-repeat;
+    background-size:750px;
     height: 147px;
-    width: 530px;
-    padding-left: 27px;
-    padding-right: 400px;
-    padding-top: 60px;
+    width: 750px;
+}
+
+header .textHeader{
+    position: absolute;
+    width: calc(100% * 2/3);
+    height: 100%;
+    top:40px;
+    right: calc(100% / 3);
     text-align: right;
 }
 
@@ -37,16 +43,16 @@ header .secondLine{
 
 header .portalImg{
     position: absolute;
-    right: 335px;
-    top: 50px;
+    right: calc(100% / 3 - 60px);
+    top: 40px;
 }
 
 
 #container{
     position: absolute;
-    top:137px;
-    height: calc(100% - 60px - 137px);
-    width: 99%;
+    left: 137px;
+    height: 99%;
+    width: calc(100% - 60px - 137px);
 
 }
 
@@ -55,9 +61,9 @@ footer{
     background-repeat: no-repeat;
     background-size: 750px;
     position: absolute;
-    bottom: 0;
-    right: calc(-75% / 2 + 60px);
-    margin-left: -461px;	
+    bottom: -100px;
+    right: -345px;
+    /*margin-left: -461px;	*/
     width: 750px;
     font-size: 14px;
     line-height: 60px;
