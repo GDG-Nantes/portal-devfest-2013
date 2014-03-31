@@ -138,9 +138,9 @@ function snapshot(){
     var contextToUse = ctxRemote;
     var videoToUse = remoteVideo;
 
-    canvasToUse = canvasLocalElement;
+    /*canvasToUse = canvasLocalElement;
     contextToUse = ctxLocal;
-    videoToUse =localVideo;
+    videoToUse =localVideo;*/
 
     canvasRemoteElement.width = remoteVideo.videoWidth;
     canvasRemoteElement.height = remoteVideo.videoHeight;
