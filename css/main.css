@@ -24,6 +24,12 @@ header{
     width: 750px;
 }
 
+.landscape header{
+    left:50%;
+    margin-left:-325px;
+    top:inherit;
+}
+
 header .textHeader{
     position: absolute;
     width: calc(100% * 2/3);
@@ -63,11 +69,17 @@ footer{
     position: absolute;
     bottom: -100px;
     right: -345px;
-    /*margin-left: -461px;	*/
     width: 750px;
     font-size: 14px;
     line-height: 60px;
     height: 60px;
+}
+
+.landscape footer{
+    right: inherit;
+    left: 50%;
+    margin-left: -325px;
+    bottom: 0;
 }
 
 canvas{
@@ -76,6 +88,11 @@ canvas{
 	-webkit-transform:rotate(90deg); */
 	position: absolute;
 	
+}
+
+.landscape canvas{
+    /*-transform:rotate(90deg);
+    -webkit-transform:rotate(90deg);*/
 }
 
 

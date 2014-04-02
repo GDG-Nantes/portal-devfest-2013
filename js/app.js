@@ -148,29 +148,37 @@ function snapshot(){
         ctxRemote.drawImage(remoteVideo, 0,0);        
     }
 
-    var delta = 50;
+    var delta = landscapeMode ? 50 : 50;
+    var landscapeMode = document.body.classList.contains('landscape');
     var idealWidth = Math.min(canvasToUse.parentElement.clientWidth, videoToUse.videoWidth + 100);
     var minVideoWidth = Math.min(canvasToUse.parentElement.clientWidth - 50, videoToUse.videoWidth);
     var ratio = videoToUse.videoWidth / videoToUse.videoHeight;
     var idealHeight = Math.min(idealWidth / ratio, videoToUse.videoHeight);
     var useVideoWidth = idealWidth === videoToUse.videoWidth + 100;
+    if (landscapeMode){
+      idealWidth = Math.min(window.innerHeight - 147 /*header*/ - 60 /*footer*/, videoToUse.videoWidth + 100);
+      minVideoWidth = Math.min(window.innerHeight - 147 /*header*/ - 60 /*footer*/ - 50, videoToUse.videoWidth);
+      idealHeight = Math.min(idealWidth / ratio, videoToUse.videoHeight);
+      useVideoWidth = idealWidth === videoToUse.videoWidth + 100;
+    }
 
-    canvasToUse.width = idealWidth;
+    canvasToUse.width = idealWidth; //landscapeMode ? idealHeight : idealWidth;
     canvasToUse.height = canvasToUse.width;
     canvasToUse.style.top = ((canvasToUse.parentElement.clientHeight - canvasToUse.height) / 2)+"px";
     canvasToUse.style.left = ((canvasToUse.parentElement.clientWidth - canvasToUse.width) / 2)+"px";
 
-    canvasFireElement.width = idealWidth;
+    canvasFireElement.width = idealWidth;// landscapeMode ? idealHeight : idealWidth;
     canvasFireElement.height = canvasFireElement.width;
     canvasFireElement.style.top = ((canvasToUse.parentElement.clientHeight - canvasFireElement.height) / 2)+"px";
     canvasFireElement.style.left = ((canvasToUse.parentElement.clientWidth - canvasFireElement.width) / 2)+"px";
 
+    var refValue = idealWidth;// landscapeMode ? idealHeight : idealWidth;
     if (localStream){
       if (!init 
-          && canvasToUse.width == idealWidth 
-          && canvasToUse.height == idealWidth
-          && canvasFireElement.width == idealWidth 
-          && canvasFireElement.height == idealWidth){
+          && canvasToUse.width == Math.round(refValue)
+          && canvasToUse.height == Math.round(refValue)
+          && canvasFireElement.width == Math.round(refValue)
+          && canvasFireElement.height == Math.round(refValue)){
 
         if (canvasFireElement.width != 100){
 
