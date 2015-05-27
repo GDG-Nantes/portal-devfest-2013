@@ -1,8 +1,5 @@
 'use strict';
 
-var sendChannel, receiveChannel;
-
-
 var isChannelReady;
 var isInitiator;
 var isStarted;
@@ -17,8 +14,7 @@ var pc_config = webrtcDetectedBrowser === 'firefox' ?
 
 var pc_constraints = {
   'optional': [
-    {'DtlsSrtpKeyAgreement': true},
-    {'RtpDataChannels': true}
+    {'DtlsSrtpKeyAgreement': true}
   ]};
 
 // Set up audio and video regardless of what devices are present.
@@ -97,14 +93,11 @@ socket.on('message', function (message){
 
 ////////////////////////////////////////////////////
 
-var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
 var canvasRemoteElement = document.querySelector('#canvasRemoteVideo');
-var canvasLocalElement = document.querySelector('#canvasLocalVideo');
 var canvasFireElement = document.querySelector('#canvasFireLocalVideo');
 var ctxRemote = canvasRemoteElement.getContext('2d');
-var ctxLocal = canvasLocalElement.getContext('2d');
 var ctxFire = canvasFireElement.getContext('2d');
 
 
@@ -137,10 +130,6 @@ function snapshot(){
     var canvasToUse = canvasRemoteElement;
     var contextToUse = ctxRemote;
     var videoToUse = remoteVideo;
-
-    /*canvasToUse = canvasLocalElement;
-    contextToUse = ctxLocal;
-    videoToUse =localVideo;*/
 
     canvasRemoteElement.width = remoteVideo.videoWidth;
     canvasRemoteElement.height = remoteVideo.videoHeight;
@@ -229,7 +218,6 @@ function snapshot(){
 
 function handleUserMedia(stream) {
   localStream = stream;
-  attachMediaStream(localVideo, stream);
   console.log('Adding local stream.');
   sendMessage('got user media');
   if (isInitiator) {
@@ -245,7 +233,7 @@ var constraints = {video: true,   maxWidth: 1280, maxHeight: 720};
 
 
 // On appel le user Media
-navigator.getUserMedia(constraints, // Contraintes De vidéos
+getUserMedia(constraints, // Contraintes De vidéos
   handleUserMedia,  // En cas de succès
   handleUserMediaError // En cas d'erreur
   );
@@ -254,7 +242,9 @@ console.log('Getting user media with constraints', constraints);
 snapshot();
 console.log('Getting snapshot', constraints);
 // On fait appel au serveur turn pour l'authent
-requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
+if (location.hostname != "localhost") {
+  requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
+}
 
 function maybeStart() {
   if (!isStarted && localStream && isChannelReady) {
@@ -288,62 +278,7 @@ function createPeerConnection() {
   pc.onaddstream = handleRemoteStreamAdded;
   pc.onremovestream = handleRemoteStreamRemoved;
 
-  if (isInitiator) {
-    try {
-      // Reliable Data Channels not yet supported in Chrome
-      sendChannel = pc.createDataChannel("sendDataChannel",
-        {reliable: false});
-      trace('Created send data channel');
-    } catch (e) {
-      alert('Failed to create data channel. ' +
-            'You need Chrome M25 or later with RtpDataChannel enabled');
-      trace('createDataChannel() failed with exception: ' + e.message);
-    }
-    sendChannel.onopen = handleSendChannelStateChange;
-    sendChannel.onclose = handleSendChannelStateChange;
-  } else {
-    pc.ondatachannel = gotReceiveChannel;
-  }
-}
-
-// function closeDataChannels() {
-//   trace('Closing data channels');
-//   sendChannel.close();
-//   trace('Closed data channel with label: ' + sendChannel.label);
-//   receiveChannel.close();
-//   trace('Closed data channel with label: ' + receiveChannel.label);
-//   localPeerConnection.close();
-//   remotePeerConnection.close();
-//   localPeerConnection = null;
-//   remotePeerConnection = null;
-//   trace('Closed peer connections');
-//   startButton.disabled = false;
-//   closeButton.disabled = true;
-//   dataChannelReceive.value = "";
-// }
-
-function gotReceiveChannel(event) {
-  trace('Receive Channel Callback');
-  receiveChannel = event.channel;
-  receiveChannel.onmessage = handleMessage;
-  receiveChannel.onopen = handleReceiveChannelStateChange;
-  receiveChannel.onclose = handleReceiveChannelStateChange;
-}
-
-function handleMessage(event) {
-  trace('Received message: ' + event.data);
-  receiveTextarea.value = event.data;
-}
-
-function handleSendChannelStateChange() {
-  var readyState = sendChannel.readyState;
-  trace('Send channel state is: ' + readyState);
   
-}
-
-function handleReceiveChannelStateChange() {
-  var readyState = receiveChannel.readyState;
-  trace('Receive channel state is: ' + readyState);
 }
 
 function handleIceCandidate(event) {
@@ -361,14 +296,12 @@ function handleIceCandidate(event) {
 
 function handleRemoteStreamAdded(event) {
   console.log('Remote stream added.');
-//  reattachMediaStream(miniVideo, localVideo);
   attachMediaStream(remoteVideo, event.stream);
   remoteStream = event.stream;
-//  waitForRemoteVideo();
 }
 
 function doCall() {
-  var constraints = {'optional': [], 'mandatory': {'MozDontOfferDataChannel': true}};
+  var constraints = {'optional': [], 'mandatory': {}};
   // temporary measure to remove Moz* constraints in Chrome
   if (webrtcDetectedBrowser === 'chrome') {
     for (var prop in constraints.mandatory) {
@@ -435,10 +368,8 @@ function requestTurn(turn_url) {
 
 function handleRemoteStreamAdded(event) {
   console.log('Remote stream added.');
- // reattachMediaStream(miniVideo, localVideo);
   attachMediaStream(remoteVideo, event.stream);
   remoteStream = event.stream;
-//  waitForRemoteVideo();
 }
 function handleRemoteStreamRemoved(event) {
   console.log('Remote stream removed. Event: ', event);

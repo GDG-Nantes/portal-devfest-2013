@@ -169,26 +169,7 @@ var canvasDemo = new function()
         bufferContext.putImageData(imageData, 0, 0);
         // ...then draw it to scale to the onscreen canvas
         // Image de base en bas !
-    /*    context.translate(0, (height*scale/2));
-        context.drawImage(buffer, 0, 0, width * scale, height * scale);
-        context.translate(0, -(height*scale/2));*/
-
-        /*
-        var degree = 45;
-        var rad = degree * Math.PI / 180;
-        var fullWidth = width * scale;
-        var fullHeight = height * scale;
-
-        context.translate(fullWidth / 2, fullHeight / 2);
-        context.rotate(rad);
-        context.translate(-fullWidth / 2, -fullHeight / 2);
-        context.translate(0,-Math.abs(Math.cos(rad))*((fullHeight - dims.height) / 2));
-        context.drawImage(buffer, 0, 0, width * scale, height * scale);
-        */
-
-       
-
-
+ 
         var timeStamp = new Date().getTime();
         angle += angleInc * ((lastTime - timeStamp) / 100);
         angle = angle % 360;
@@ -199,29 +180,6 @@ var canvasDemo = new function()
         drawAngle(angle+180);
         drawAngle(angle+270);
 
-/*
-        
-        // image quart droite
-        context.translate(height*scale, 0);
-        context.rotate(90 * Math.PI / 180);
-        context.drawImage(buffer, 0, 0, width * scale, height * scale);
-        //Annulation mouvement
-        context.rotate(-90 * Math.PI / 180);
-        context.translate(-height*scale, 0);
-
-        // Image inversée
-        context.translate((width * scale) - 1, (height * scale)-1);
-        context.rotate(Math.PI);
-        context.drawImage(buffer, 0, 0, width * scale, height * scale);
-        //Annulation
-        context.rotate(-Math.PI);
-        context.translate(-(width * scale) + 1, -(height * scale)+1);
-                
-        // Image quart gauche
-        context.translate(width / scale, width * scale);
-        context.rotate(-90 * Math.PI / 180);
-        context.drawImage(buffer, 0, 0, width * scale, height * scale);
-  */      
     };
 
 
